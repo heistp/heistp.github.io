@@ -1,0 +1,66 @@
+2022-11-08 16:52:26.336786 - launch.right: /usr/sbin/ip netns add right
+2022-11-08 16:52:26.340126 - launch.right: /usr/sbin/ip netns exec right /tmp/antler-3617778215/antler-node-linux-amd64 right
+2022-11-08 16:52:26.342641 - launch.mid: /usr/sbin/ip netns add mid
+2022-11-08 16:52:26.346798 - launch.mid: /usr/sbin/ip netns exec mid /tmp/antler-3617778215/antler-node-linux-amd64 mid
+2022-11-08 16:52:26.348835 - launch.left: /usr/sbin/ip netns add left
+2022-11-08 16:52:26.351594 - launch.left: /usr/sbin/ip netns exec left /tmp/antler-3617778215/antler-node-linux-amd64 left
+2022-11-08 16:52:26.363724 right node: /usr/sbin/sysctl -w net.ipv6.conf.all.disable_ipv6=1
+2022-11-08 16:52:26.369072 right node: net.ipv6.conf.all.disable_ipv6 = 1
+2022-11-08 16:52:26.369258 right node: /usr/sbin/ip link add dev right.l type veth peer name mid.r
+2022-11-08 16:52:26.381173 right node: /usr/sbin/ip link set dev mid.r netns mid
+2022-11-08 16:52:26.387233 right node: /usr/sbin/ip addr add 10.0.0.2/24 dev right.l
+2022-11-08 16:52:26.388169 right node: /usr/sbin/ip link set right.l up
+2022-11-08 16:52:26.389262 right node: /usr/sbin/ethtool -K right.l rx off tx off sg off tso off gso off gro off rxvlan off txvlan off
+2022-11-08 16:52:26.392884 mid node: /usr/sbin/sysctl -w net.ipv6.conf.all.disable_ipv6=1
+2022-11-08 16:52:26.393871 mid node: net.ipv6.conf.all.disable_ipv6 = 1
+2022-11-08 16:52:26.394062 mid node: /usr/sbin/ip link set mid.r up
+2022-11-08 16:52:26.395292 mid node: /usr/sbin/ethtool -K mid.r rx off tx off sg off tso off gso off gro off rxvlan off txvlan off
+2022-11-08 16:52:26.397030 mid node: /usr/sbin/ip link add dev mid.l type veth peer name left.r
+2022-11-08 16:52:26.398234 mid node: /usr/sbin/ip link set dev left.r netns left
+2022-11-08 16:52:26.408263 mid node: /usr/sbin/ip link set dev mid.l up
+2022-11-08 16:52:26.409440 mid node: /usr/sbin/ethtool -K mid.l rx off tx off sg off tso off gso off gro off rxvlan off txvlan off
+2022-11-08 16:52:26.410254 mid node: /usr/sbin/ip link add name mid.b type bridge
+2022-11-08 16:52:26.426548 mid node: /usr/sbin/ip link set dev mid.r master mid.b
+2022-11-08 16:52:26.428786 mid node: /usr/sbin/ip link set dev mid.l master mid.b
+2022-11-08 16:52:26.430229 mid node: /usr/sbin/ip link set dev mid.b up
+2022-11-08 16:52:26.431404 mid node: /usr/sbin/tc qdisc add dev mid.l root netem delay 10ms limit 1000000
+2022-11-08 16:52:26.441362 mid node: /usr/sbin/ip link add dev imid.l type ifb
+2022-11-08 16:52:26.447706 mid node: /usr/sbin/tc qdisc add dev imid.l root handle 1: netem delay 10ms limit 1000000
+2022-11-08 16:52:26.450122 mid node: /usr/sbin/tc qdisc add dev mid.l handle ffff: ingress
+2022-11-08 16:52:26.458985 mid node: /usr/sbin/ip link set dev imid.l up
+2022-11-08 16:52:26.462892 mid node: /usr/sbin/tc filter add dev mid.l parent ffff: protocol all prio 10 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev imid.l
+2022-11-08 16:52:26.496014 mid node: /usr/sbin/tc qdisc add dev mid.r root cake bandwidth 50Mbit flowblind
+2022-11-08 16:52:26.503035 left node: /usr/sbin/modprobe tcp_linear
+2022-11-08 16:52:26.507567 left node: /usr/sbin/sysctl -w net.ipv6.conf.all.disable_ipv6=1
+2022-11-08 16:52:26.508860 left node: net.ipv6.conf.all.disable_ipv6 = 1
+2022-11-08 16:52:26.508964 left node: /usr/sbin/ip addr add 10.0.0.1/24 dev left.r
+2022-11-08 16:52:26.510432 left node: /usr/sbin/ip link set left.r up
+2022-11-08 16:52:26.511552 left node: /usr/sbin/ethtool -K left.r rx off tx off sg off tso off gso off gro off rxvlan off txvlan off
+2022-11-08 16:52:26.512838 left node: /usr/bin/ping -c 3 -i 0.1 10.0.0.2
+2022-11-08 16:52:26.739460 left node: ->
+PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.
+64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=41.1 ms
+64 bytes from 10.0.0.2: icmp_seq=2 ttl=64 time=20.6 ms
+64 bytes from 10.0.0.2: icmp_seq=3 ttl=64 time=21.0 ms
+--- 10.0.0.2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 202ms
+rtt min/avg/max/mdev = 20.621/27.563/41.100/9.572 ms
+2022-11-08 16:52:26.740263 right node: /usr/sbin/tcpdump -i right.l -s 128 -w -
+2022-11-08 16:52:26.750945 left node: /usr/sbin/tcpdump -i left.r -s 128 -w -
+2022-11-08 16:52:26.362969 - feedback: feedback: map[]
+2022-11-08 16:53:27.409618 - launch.mid: /usr/sbin/ip netns del mid
+2022-11-08 16:53:27.422639 left node: ->
+tcpdump: listening on left.r, link-type EN10MB (Ethernet), capture size 128 bytes
+324184 packets captured
+325004 packets received by filter
+0 packets dropped by kernel
+2022-11-08 16:53:27.423632 right node: read |0: file already closed
+2022-11-08 16:53:27.424135 right node: ->
+tcpdump: listening on right.l, link-type EN10MB (Ethernet), capture size 128 bytes
+324193 packets captured
+324959 packets received by filter
+0 packets dropped by kernel
+2022-11-08 16:53:27.575678 - launch.right: /usr/sbin/ip netns del right
+2022-11-08 16:53:27.658219 - launch.left: /usr/sbin/ip netns del left
+2022-11-08 16:53:27.660245 - launch.left: removing /tmp/antler-3617778215/antler-node-linux-amd64
+2022-11-08 16:53:27.660875 - launch.left: removing /tmp/antler-3617778215
